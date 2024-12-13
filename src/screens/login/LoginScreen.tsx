@@ -1,8 +1,21 @@
 import { CommonActions } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, Dimensions, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+  Dimensions,
+  Alert,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { NAVIGATIONS_ROUTE } from '../../navigation/Routes';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../../shared/util/type';
+import Loading from '../../components/Loading';
 
 const { height } = Dimensions.get('window');
 
@@ -10,6 +23,31 @@ const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ email: '', password: '' });
+
+  const [loading, setLoading] = useState(false); 
+
+  const postLogin = async () => {
+    try {
+      setLoading(true); 
+      const user = { email: email.toLowerCase(), password: password };
+      const res = await axios.post(`${API_URL}/api/v1/login`, user);
+      if (res.data.status === 'error') {
+        Alert.alert("Thông tin chưa chính xác!");
+      } else {
+        await AsyncStorage.setItem('userEmail', user.email);
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: NAVIGATIONS_ROUTE.Drawer_NAVIGATION }],
+          })
+        );
+      }
+    } catch (error: any) {
+      Alert.alert("Đã có lỗi xảy ra!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validateInputs = () => {
     const newErrors = { email: '', password: '' };
@@ -33,28 +71,25 @@ const LoginScreen = ({ navigation }: any) => {
 
   const handleLogin = () => {
     if (validateInputs()) {
-      Alert.alert('Đăng nhập thành công!');
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: NAVIGATIONS_ROUTE.Drawer_NAVIGATION }],
-        })
-      );
+      postLogin()
     }
   };
 
   return (
+    loading ? <Loading /> :
     <ImageBackground
-      source={{ uri: 'https://i.pinimg.com/474x/0f/f1/c5/0ff1c5c5b41308607116e63d2c7e5b1a.jpg' }}
+      source={{
+        uri: 'https://i.pinimg.com/474x/0f/f1/c5/0ff1c5c5b41308607116e63d2c7e5b1a.jpg',
+      }}
       style={styles.background}
       imageStyle={styles.backgroundImage}
     >
       <View style={styles.overlayContainer}>
         <View style={styles.container}>
-        <Text style={[styles.title, { color: '#55AAFE' }]}>Đăng nhập</Text>
+          <Text style={[styles.title, { color: '#55AAFE' }]}>Đăng nhập</Text>
 
           <TextInput
-            style={[styles.input, errors.email && styles.inputError]}
+            style={[styles.input, errors.email ? styles.inputError : undefined]}
             placeholder="Email"
             placeholderTextColor="#ccc"
             value={email}
@@ -67,7 +102,7 @@ const LoginScreen = ({ navigation }: any) => {
           {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
 
           <TextInput
-            style={[styles.input, errors.password && styles.inputError]}
+            style={[styles.input, errors.password ? styles.inputError : undefined]}
             placeholder="Mật khẩu"
             placeholderTextColor="#ccc"
             secureTextEntry
@@ -84,6 +119,13 @@ const LoginScreen = ({ navigation }: any) => {
               <Text style={styles.buttonText}>Đăng nhập</Text>
             </TouchableOpacity>
           </LinearGradient>
+
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Chưa có tài khoản? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate(NAVIGATIONS_ROUTE.SCREEN_REGISTER)}>
+              <Text style={[styles.registerText, { color: '#55AAFE', fontStyle: 'italic' }]}>Đăng ký</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ImageBackground>
@@ -167,6 +209,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  registerText: {
+    fontSize: 16,
+    color: '#B0B0B0',
   },
 });
 

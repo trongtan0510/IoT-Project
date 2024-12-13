@@ -4,6 +4,10 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import HomeScreen from '../screens/home/HomeScreen';
 import { CommonActions } from '@react-navigation/native';
 import { NAVIGATIONS_ROUTE } from './Routes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import UpdateScreen from '../screens/profile/IntroScreen';
+import GuideScreen from '../screens/profile/Setting';
 
 const { width } = Dimensions.get('window');
 const Drawer = createDrawerNavigator();
@@ -16,13 +20,18 @@ const CustomDrawerContent = ({ navigation }: any) => {
     navigation.navigate(screen);
   };
 
-  const handleLogout = () => {
-    navigation.dispatch(
-      CommonActions.reset({
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('userEmail');
+      navigation.dispatch(
+        CommonActions.reset({
           index: 0,
           routes: [{ name: NAVIGATIONS_ROUTE.SCREEN_LOGIN }],
-      })
-  );
+        })
+      );
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   return (
@@ -40,10 +49,16 @@ const CustomDrawerContent = ({ navigation }: any) => {
         <Text style={styles.menuText}>Thông tin cá nhân</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => handlePress('Liên hệ')}
-        style={[styles.menuItem, activeItem === 'Liên hệ' && styles.activeMenuItem]}
+        onPress={() => handlePress('Giới thiệu')}
+        style={[styles.menuItem, activeItem === 'Giới thiệu' && styles.activeMenuItem]}
       >
-        <Text style={styles.menuText}>Liên hệ</Text>
+        <Text style={styles.menuText}>Giới thiệu</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => handlePress('Hướng dẫn sử dụng')}
+        style={[styles.menuItem, activeItem === 'Hướng dẫn sử dụng' && styles.activeMenuItem]}
+      >
+        <Text style={styles.menuText}>Hướng dẫn sử dụng</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleLogout} style={styles.logoutButton} activeOpacity={0.7}>
         <Text style={[styles.logoutText, activeItem === 'Đăng xuất' && styles.activeMenuItem]}>Đăng xuất</Text>
@@ -66,17 +81,22 @@ export function DrawerNavigation() {
       <Drawer.Screen
         name="Trang chủ"
         component={HomeScreen}
-        options={{ headerShown: false }} 
+        options={{ headerShown: false }}
       />
       <Drawer.Screen
         name="Thông tin cá nhân"
-        component={HomeScreen}
-        options={{ headerShown: false }} 
+        component={ProfileScreen}
+        options={{ headerShown: false }}
       />
       <Drawer.Screen
-        name="Liên hệ"
-        component={HomeScreen}
-        options={{ headerShown: false }} 
+        name="Giới thiệu"
+        component={UpdateScreen}
+        options={{ headerShown: true}}
+      />
+      <Drawer.Screen
+        name="Hướng dẫn sử dụng"
+        component={GuideScreen}
+        options={{ headerShown: false }}
       />
     </Drawer.Navigator>
   );

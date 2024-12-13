@@ -1,0 +1,1 @@
+export const API_URL= 'https://iot-server-2dex.onrender.com'

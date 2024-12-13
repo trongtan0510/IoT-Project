@@ -7,6 +7,7 @@ const HumidityModal = ({ visible, onClose, onSave }: any) => {
 
   const handleSave = () => {
     onSave(humidity); 
+    
     onClose(); 
   };
 
